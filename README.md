@@ -1,2 +1,0 @@
-# BOTOLAYER
-for mod geode
