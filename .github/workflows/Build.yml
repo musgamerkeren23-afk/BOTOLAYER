@@ -24,4 +24,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: BOTPLAYER-android64
-          path: build/*.geode
+          path: BOTPLAYER/build/*.geode
