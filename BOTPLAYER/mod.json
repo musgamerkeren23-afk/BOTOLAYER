@@ -1,0 +1,18 @@
+{
+    "geode": "v5.8.2",
+    "gd": {
+        "win": "2.208",
+        "android": "2.208"
+    },
+    "version": "v1.0.0",
+    "id": "com.musgamerkeren23.botolayer",
+    "name": "BOTPLAYER",
+    "developer": "musgamerkeren23",
+    "description": "Bot player mod buat Geometry Dash - macro recorder/playback (Manual) dan AI auto-play pakai genetic algorithm (Automatic).",
+    "repository": "https://github.com/musgamerkeren23-afk/BOTPLAYER",
+    "tags": ["bot", "utility", "gameplay"],
+    "settings": {},
+    "resources": {
+        "spritesheets": {}
+    }
+}
