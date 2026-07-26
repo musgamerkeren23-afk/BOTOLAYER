@@ -6,9 +6,12 @@
 
 using namespace geode::prelude;
 
-class BotPlayerPopup : public Popup<> {
+class BotPlayerPopup : public geode::Popup {
 protected:
     enum class Tab { Manual, Automatic };
+
+    static constexpr float POPUP_WIDTH = 360.f;
+    static constexpr float POPUP_HEIGHT = 260.f;
 
     CCMenu* m_tabMenu = nullptr;
     CCLayer* m_manualLayer = nullptr;
@@ -19,7 +22,7 @@ protected:
 
     Tab m_currentTab = Tab::Manual;
 
-    bool setup() override;
+    bool init();
 
     void switchTab(Tab tab);
     CCLayer* buildManualTab();
