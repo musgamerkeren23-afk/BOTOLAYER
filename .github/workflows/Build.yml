@@ -18,6 +18,7 @@ jobs:
         with:
           target: Android64
           sdk: latest
+          path: BOTPLAYER
 
       - name: Upload hasil build
         uses: actions/upload-artifact@v4
