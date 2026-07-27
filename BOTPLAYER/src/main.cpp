@@ -111,26 +111,24 @@ class $modify(BPPlayLayer, PlayLayer) {
     }
 };
 
-// Hook ke PauseLayer: nambahin tombol BOTPLAYER di menu pause
+// Hook ke PauseLayer, ikutin pola RESMI dari dokumentasi Geode:
+// bikin CCMenu baru sendiri & tempel langsung ke layer, TIDAK nyari-nyari
+// menu yang udah ada (itu yang bikin crash sebelumnya)
 class $modify(BPPauseLayer, PauseLayer) {
     bool init(bool useV2) {
         if (!PauseLayer::init(useV2)) return false;
 
-        auto menu = this->getChildByID("right-button-menu");
-        if (!menu) {
-            // fallback kalau ID beda di versi GD lain
-            menu = this->getChildByType<CCMenu>(0);
-        }
+        auto buttonSprite = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+        if (!buttonSprite) return true; // aman-in, kalau sprite gagal load jangan crash
 
-        if (menu) {
-            auto btnSpr = ButtonSprite::create("BOT");
-            btnSpr->setScale(0.6f);
-            auto btn = CCMenuItemSpriteExtra::create(
-                btnSpr, this, menu_selector(BPPauseLayer::onOpenBotPlayer)
-            );
-            menu->addChild(btn);
-            menu->updateLayout();
-        }
+        auto button = CCMenuItemSpriteExtra::create(
+            buttonSprite, this, menu_selector(BPPauseLayer::onOpenBotPlayer)
+        );
+
+        auto menu = CCMenu::create();
+        menu->addChild(button);
+        menu->setPosition({ 40.f, 40.f }); // pojok kiri bawah, area yang biasanya kosong
+        this->addChild(menu);
 
         return true;
     }
