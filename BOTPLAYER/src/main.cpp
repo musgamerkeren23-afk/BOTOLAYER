@@ -1,7 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
-#include <Geode/modify/PauseLayer.hpp>
 #include "ManualTab.hpp"
 #include "GeneticBot.hpp"
 #include "BotPlayerPopup.hpp"
@@ -64,7 +63,26 @@ class $modify(BPPlayLayer, PlayLayer) {
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
         g_currentPlayLayer = this;
+
+        // Tombol buka popup BOTPLAYER ditaro di sini (bukan di PauseLayer),
+        // karena hook PauseLayer::init selalu SIGILL di device ini -- PlayLayer
+        // udah kebukti aman di-hook (record/playback jalan tanpa crash)
+        auto buttonSprite = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+        if (buttonSprite) {
+            auto button = CCMenuItemSpriteExtra::create(
+                buttonSprite, this, menu_selector(BPPlayLayer::onOpenBotPlayer)
+            );
+            auto menu = CCMenu::create();
+            menu->addChild(button);
+            menu->setPosition({ 40.f, 40.f }); // pojok kiri bawah layar
+            this->addChild(menu, 100); // z-order tinggi biar nggak ketutup objek level
+        }
+
         return true;
+    }
+
+    void onOpenBotPlayer(CCObject*) {
+        BotPlayerPopup::create()->show();
     }
 
     void update(float dt) {
@@ -108,33 +126,6 @@ class $modify(BPPlayLayer, PlayLayer) {
         }
 
         PlayLayer::resetLevel();
-    }
-};
-
-// Hook ke PauseLayer, ikutin pola RESMI dari dokumentasi Geode:
-// bikin CCMenu baru sendiri & tempel langsung ke layer, TIDAK nyari-nyari
-// menu yang udah ada (itu yang bikin crash sebelumnya)
-class $modify(BPPauseLayer, PauseLayer) {
-    bool init(bool useV2) {
-        if (!PauseLayer::init(useV2)) return false;
-
-        auto buttonSprite = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
-        if (!buttonSprite) return true; // aman-in, kalau sprite gagal load jangan crash
-
-        auto button = CCMenuItemSpriteExtra::create(
-            buttonSprite, this, menu_selector(BPPauseLayer::onOpenBotPlayer)
-        );
-
-        auto menu = CCMenu::create();
-        menu->addChild(button);
-        menu->setPosition({ 40.f, 40.f }); // pojok kiri bawah, area yang biasanya kosong
-        this->addChild(menu);
-
-        return true;
-    }
-
-    void onOpenBotPlayer(CCObject*) {
-        BotPlayerPopup::create()->show();
     }
 };
 
