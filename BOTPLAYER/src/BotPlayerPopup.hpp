@@ -6,10 +6,15 @@
 
 using namespace geode::prelude;
 
+// Tab dipindah ke global scope biar bisa disimpen di variabel global
+// (g_lastSelectedTab), supaya tab yang lagi aktif nggak reset tiap popup dibuka ulang
+enum class BotPlayerTab { Manual, Automatic };
+
+// Tab terakhir yang aktif, bertahan lintas buka-tutup popup (didefinisikan di .cpp)
+extern BotPlayerTab g_lastSelectedTab;
+
 class BotPlayerPopup : public geode::Popup {
 protected:
-    enum class Tab { Manual, Automatic };
-
     static constexpr float POPUP_WIDTH = 360.f;
     static constexpr float POPUP_HEIGHT = 260.f;
 
@@ -20,13 +25,13 @@ protected:
     CCLabelBMFont* m_manualStatusLabel = nullptr;
     CCLabelBMFont* m_autoStatusLabel = nullptr;
 
-    Tab m_currentTab = Tab::Manual;
-
     bool init();
 
-    void switchTab(Tab tab);
+    void switchTab(BotPlayerTab tab);
     CCLayer* buildManualTab();
     CCLayer* buildAutomaticTab();
+    void refreshManualStatusLabel();
+    void refreshAutoStatusLabel();
 
     void onTabManual(CCObject*);
     void onTabAutomatic(CCObject*);
