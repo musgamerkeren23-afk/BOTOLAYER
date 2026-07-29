@@ -3,6 +3,8 @@
 extern ManualTab g_manualTab;
 extern GeneticBot g_geneticBot;
 
+BotPlayerTab g_lastSelectedTab = BotPlayerTab::Manual;
+
 BotPlayerPopup* BotPlayerPopup::create() {
     auto ret = new BotPlayerPopup();
     if (ret->init()) {
@@ -42,15 +44,17 @@ bool BotPlayerPopup::init() {
     m_mainLayer->addChild(m_manualLayer);
     m_mainLayer->addChild(m_automaticLayer);
 
-    switchTab(Tab::Manual);
+    refreshManualStatusLabel();
+    refreshAutoStatusLabel();
+    switchTab(g_lastSelectedTab);
 
     return true;
 }
 
-void BotPlayerPopup::switchTab(Tab tab) {
-    m_currentTab = tab;
-    m_manualLayer->setVisible(tab == Tab::Manual);
-    m_automaticLayer->setVisible(tab == Tab::Automatic);
+void BotPlayerPopup::switchTab(BotPlayerTab tab) {
+    g_lastSelectedTab = tab;
+    m_manualLayer->setVisible(tab == BotPlayerTab::Manual);
+    m_automaticLayer->setVisible(tab == BotPlayerTab::Automatic);
 }
 
 CCLayer* BotPlayerPopup::buildManualTab() {
@@ -108,24 +112,44 @@ CCLayer* BotPlayerPopup::buildAutomaticTab() {
     return layer;
 }
 
+void BotPlayerPopup::refreshManualStatusLabel() {
+    if (!m_manualStatusLabel) return;
+    if (g_manualTab.getState() == ManualTab::State::Recording) {
+        m_manualStatusLabel->setString("Status: Recording...");
+    } else if (g_manualTab.getState() == ManualTab::State::Playing) {
+        m_manualStatusLabel->setString("Status: Playing...");
+    } else {
+        m_manualStatusLabel->setString(
+            fmt::format("Status: Idle ({} frame tersimpan)", g_manualTab.getMacro().frames.size()).c_str()
+        );
+    }
+}
+
+void BotPlayerPopup::refreshAutoStatusLabel() {
+    if (!m_autoStatusLabel) return;
+    m_autoStatusLabel->setString(
+        fmt::format("{} | Best: {:.1f}%",
+            g_geneticBot.isRunning() ? "Running..." : "Stopped",
+            g_geneticBot.getBestSoFar().fitness
+        ).c_str()
+    );
+}
+
 void BotPlayerPopup::onTabManual(CCObject*) {
-    switchTab(Tab::Manual);
+    switchTab(BotPlayerTab::Manual);
 }
 
 void BotPlayerPopup::onTabAutomatic(CCObject*) {
-    switchTab(Tab::Automatic);
+    switchTab(BotPlayerTab::Automatic);
 }
 
 void BotPlayerPopup::onRecordToggle(CCObject*) {
     if (g_manualTab.getState() == ManualTab::State::Recording) {
         g_manualTab.stopRecording();
-        m_manualStatusLabel->setString(
-            fmt::format("Status: Idle ({} frame tersimpan)", g_manualTab.getMacro().frames.size()).c_str()
-        );
     } else {
         g_manualTab.startRecording();
-        m_manualStatusLabel->setString("Status: Recording...");
     }
+    refreshManualStatusLabel();
 }
 
 void BotPlayerPopup::onPlayback(CCObject*) {
@@ -134,6 +158,7 @@ void BotPlayerPopup::onPlayback(CCObject*) {
         return;
     }
     g_manualTab.startPlayback();
+    refreshManualStatusLabel();
 }
 
 void BotPlayerPopup::onAutoToggle(CCObject*) {
@@ -142,4 +167,5 @@ void BotPlayerPopup::onAutoToggle(CCObject*) {
     } else {
         g_geneticBot.stop();
     }
+    refreshAutoStatusLabel();
 }
