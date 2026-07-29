@@ -18,29 +18,9 @@ bool g_lastPlaybackHold = false;
 // Referensi ke PlayLayer aktif, dipakai buat baca frame saat ini dari mana aja
 PlayLayer* g_currentPlayLayer = nullptr;
 
-// Hook ke PlayerObject: ini yang dipanggil GD PERSIS pas pemain nekan/lepas tombol,
-// jauh lebih akurat daripada nebak dari polling di update()
-class $modify(BPPlayerObject, PlayerObject) {
-    void pushButton(PlayerButton btn) {
-        PlayerObject::pushButton(btn);
-        if (btn != PlayerButton::Jump) return; // fokus tombol jump dulu
-
-        if (g_manualTab.getState() == ManualTab::State::Recording && g_currentPlayLayer) {
-            int frame = (int)g_currentPlayLayer->m_gameState.m_currentProgress; // sesuaikan API progress asli
-            g_manualTab.onFrame(frame, true);
-        }
-    }
-
-    void releaseButton(PlayerButton btn) {
-        PlayerObject::releaseButton(btn);
-        if (btn != PlayerButton::Jump) return;
-
-        if (g_manualTab.getState() == ManualTab::State::Recording && g_currentPlayLayer) {
-            int frame = (int)g_currentPlayLayer->m_gameState.m_currentProgress;
-            g_manualTab.onFrame(frame, false);
-        }
-    }
-};
+// (Hook PlayerObject::pushButton dihapus -- terbukti nggak ke-trigger buat
+// sentuhan layar asli di device ini, 0 frame kerekam. Ganti pakai handleButton
+// di PlayLayer, titik hook yang lebih universal buat nangkep semua jenis input.)
 
 // Helper: apply satu macro ke player di frame saat ini, dipake bareng
 // buat playback Manual maupun Automatic (logic-nya sama persis)
@@ -83,6 +63,23 @@ class $modify(BPPlayLayer, PlayLayer) {
 
     void onOpenBotPlayer(CCObject*) {
         BotPlayerPopup::create()->show();
+    }
+
+    // Dipanggil GD buat SETIAP jenis input (keyboard, touch, dll) -- lebih
+    // reliable daripada hook langsung ke PlayerObject::pushButton
+    void handleButton(bool down, int button, bool isPlayer1) {
+        PlayLayer::handleButton(down, button, isPlayer1);
+
+        log::info("BOTPLAYER DEBUG: handleButton down={} button={} p1={}", down, button, isPlayer1); // <- diagnostik
+
+        // button 1 = Jump di GD
+        if (button != 1) return;
+
+        if (g_manualTab.getState() == ManualTab::State::Recording) {
+            int frame = (int)m_gameState.m_currentProgress;
+            log::info("BOTPLAYER DEBUG: recording via handleButton, frame={} down={}", frame, down); // <- diagnostik
+            g_manualTab.onFrame(frame, down);
+        }
     }
 
     void update(float dt) {
