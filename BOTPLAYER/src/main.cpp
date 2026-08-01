@@ -40,10 +40,12 @@ static void applyMacroInput(PlayerObject* player, const std::vector<InputFrame>&
 }
 
 class $modify(BPPlayLayer, PlayLayer) {
-    // Counter yang kelihatan langsung di layar -- biar bisa verifikasi tanpa
-    // perlu buka log/console yang susah diakses
-    CCLabelBMFont* m_debugCounterLabel = nullptr;
-    int m_debugButtonCallCount = 0;
+    // Geode $modify class TIDAK BOLEH ditambahin member langsung -- harus
+    // dibungkus struct Fields, diakses lewat m_fields->
+    struct Fields {
+        CCLabelBMFont* debugCounterLabel = nullptr;
+        int debugButtonCallCount = 0;
+    };
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
@@ -64,11 +66,11 @@ class $modify(BPPlayLayer, PlayLayer) {
         }
 
         // Label counter debug, pojok KIRI ATAS, biar keliatan tanpa buka apapun
-        m_debugCounterLabel = CCLabelBMFont::create("handleButton: 0", "bigFont.fnt");
-        m_debugCounterLabel->setScale(0.4f);
-        m_debugCounterLabel->setAnchorPoint({ 0.f, 1.f });
-        m_debugCounterLabel->setPosition({ 5.f, CCDirector::sharedDirector()->getWinSize().height - 5.f });
-        this->addChild(m_debugCounterLabel, 1000);
+        m_fields->debugCounterLabel = CCLabelBMFont::create("handleButton: 0", "bigFont.fnt");
+        m_fields->debugCounterLabel->setScale(0.4f);
+        m_fields->debugCounterLabel->setAnchorPoint({ 0.f, 1.f });
+        m_fields->debugCounterLabel->setPosition({ 5.f, CCDirector::sharedDirector()->getWinSize().height - 5.f });
+        this->addChild(m_fields->debugCounterLabel, 1000);
 
         return true;
     }
@@ -83,11 +85,11 @@ class $modify(BPPlayLayer, PlayLayer) {
         PlayLayer::handleButton(down, button, isPlayer1);
 
         // Update counter yang keliatan di layar (nggak butuh log/console)
-        m_debugButtonCallCount++;
-        if (m_debugCounterLabel) {
-            m_debugCounterLabel->setString(
+        m_fields->debugButtonCallCount++;
+        if (m_fields->debugCounterLabel) {
+            m_fields->debugCounterLabel->setString(
                 fmt::format("handleButton: {} (btn={}, down={})",
-                    m_debugButtonCallCount, button, down).c_str()
+                    m_fields->debugButtonCallCount, button, down).c_str()
             );
         }
 
