@@ -72,8 +72,8 @@ class $modify(BPPlayLayer, PlayLayer) {
 
         log::info("BOTPLAYER DEBUG: handleButton down={} button={} p1={}", down, button, isPlayer1); // <- diagnostik
 
-        // button 1 = Jump di GD
-        if (button != 1) return;
+        // (Filter "button != 1" dihapus SEMENTARA buat testing -- siapa tau
+        // ID tombol jump di touch/mobile beda dari 1, jadi kita rekam semua dulu)
 
         if (g_manualTab.getState() == ManualTab::State::Recording) {
             int frame = (int)m_gameState.m_currentProgress;
@@ -86,9 +86,6 @@ class $modify(BPPlayLayer, PlayLayer) {
         PlayLayer::update(dt);
 
         int frame = m_gameState.m_currentProgress; // contoh, nanti disesuaikan API asli
-
-        // (Capture record udah di-handle di hook BPPlayerObject::pushButton/releaseButton,
-        // bukan di sini lagi -- lebih akurat karena nangkep momen tekan/lepas asli)
 
         // Tab Manual: kalau lagi playback, tiru input dari macro yg tersimpan
         if (g_manualTab.getState() == ManualTab::State::Playing) {
