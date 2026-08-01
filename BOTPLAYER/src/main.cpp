@@ -40,6 +40,11 @@ static void applyMacroInput(PlayerObject* player, const std::vector<InputFrame>&
 }
 
 class $modify(BPPlayLayer, PlayLayer) {
+    // Counter yang kelihatan langsung di layar -- biar bisa verifikasi tanpa
+    // perlu buka log/console yang susah diakses
+    CCLabelBMFont* m_debugCounterLabel = nullptr;
+    int m_debugButtonCallCount = 0;
+
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
         g_currentPlayLayer = this;
@@ -58,6 +63,13 @@ class $modify(BPPlayLayer, PlayLayer) {
             this->addChild(menu, 100); // z-order tinggi biar nggak ketutup objek level
         }
 
+        // Label counter debug, pojok KIRI ATAS, biar keliatan tanpa buka apapun
+        m_debugCounterLabel = CCLabelBMFont::create("handleButton: 0", "bigFont.fnt");
+        m_debugCounterLabel->setScale(0.4f);
+        m_debugCounterLabel->setAnchorPoint({ 0.f, 1.f });
+        m_debugCounterLabel->setPosition({ 5.f, CCDirector::sharedDirector()->getWinSize().height - 5.f });
+        this->addChild(m_debugCounterLabel, 1000);
+
         return true;
     }
 
@@ -70,14 +82,17 @@ class $modify(BPPlayLayer, PlayLayer) {
     void handleButton(bool down, int button, bool isPlayer1) {
         PlayLayer::handleButton(down, button, isPlayer1);
 
-        log::info("BOTPLAYER DEBUG: handleButton down={} button={} p1={}", down, button, isPlayer1); // <- diagnostik
-
-        // (Filter "button != 1" dihapus SEMENTARA buat testing -- siapa tau
-        // ID tombol jump di touch/mobile beda dari 1, jadi kita rekam semua dulu)
+        // Update counter yang keliatan di layar (nggak butuh log/console)
+        m_debugButtonCallCount++;
+        if (m_debugCounterLabel) {
+            m_debugCounterLabel->setString(
+                fmt::format("handleButton: {} (btn={}, down={})",
+                    m_debugButtonCallCount, button, down).c_str()
+            );
+        }
 
         if (g_manualTab.getState() == ManualTab::State::Recording) {
             int frame = (int)m_gameState.m_currentProgress;
-            log::info("BOTPLAYER DEBUG: recording via handleButton, frame={} down={}", frame, down); // <- diagnostik
             g_manualTab.onFrame(frame, down);
         }
     }
